@@ -207,30 +207,27 @@ def plt_show0(img):
     plt.show()
 
 # 初始化 PaddleOCR（初次识别，使用优化参数）
+
 ocr_primary = PaddleOCR(
-    use_angle_cls=True,
+    use_textline_orientation=True,     # 代替 use_angle_cls
     lang="ch",
-    use_gpu=False,  # 改为使用CPU
-    det_db_thresh=0.03,
-    det_db_box_thresh=0.05,
-    det_db_unclip_ratio=5.0,
-    det_limit_side_len=2000,
-    drop_score=0.7,
-    show_log=True
+    text_det_thresh=0.03,              # 代替 det_db_thresh
+    text_det_box_thresh=0.05,          # 代替 det_db_box_thresh
+    text_det_unclip_ratio=5.0,         # 代替 det_db_unclip_ratio
+    text_det_limit_side_len=2000       # 代替 det_limit_side_len
 )
 
-# 初始化 PaddleOCR（二次识别，使用默认参数，类似 ocr_demo）
 ocr_secondary = PaddleOCR(
-    use_angle_cls=True,
-    lang="ch",
-    use_gpu=False,  # 改为使用CPU
+    use_textline_orientation=True,
+    lang="ch"
 )
+
 
 # 简单 OCR 函数（基于 ocr_demo）
 def simple_ocr(image_path):
     """对图像执行简单 OCR 识别，返回文本和置信度"""
     try:
-        result = ocr_secondary.ocr(image_path, cls=True)
+        result = ocr_secondary.predict(image_path)
         if result and result[0]:
             # 选择置信度最高的文本
             best_line = max(result[0], key=lambda x: x[1][1])
@@ -244,138 +241,129 @@ def simple_ocr(image_path):
     except Exception as e:
         print(f"简单 OCR 识别 {image_path} 失败: {str(e)}")
         return "", 0.0
+# 车牌识别主函数
+# try:
+#     # 加载图像
+#     image_path = os.path.abspath(os.path.join(project_root, '..', 'static', 'uploads', image['filename']))
+#     image = load_image(image_path)
+#     # 预处理图像
+#     image_detect = detect_colors(image)
+#     exam=locate_license_plate(image_detect)
+#     cv2.imwrite('exam.png',exam)
+#     image=preprocess_image(exam)
+#     output_image = image.copy()
 
-# 主处理流程
-try:
-    # 加载图像
-    image_path = 'Your_path.style'
-    image = load_image(image_path)
-    # 预处理图像
-    image_detect = detect_colors(image)
-    exam=locate_license_plate(image_detect)
-    cv2.imwrite('exam.png',exam)
-    image=preprocess_image(exam)
-    output_image = image.copy()
+#     # 第一次运行 PaddleOCR（检测文本框）
+#     temp_path = 'exam.png'
+#     result =ocr_secondary.predict(image_path)
 
-    # 第一次运行 PaddleOCR（检测文本框）
-    temp_path = 'exam.png'
-    result = ocr_primary.ocr(temp_path, cls=True)
+#     # 处理识别结果
+#     license_plate = []
+#     boxes = []
+#     scores = []
+#     if result and len(result) > 0 and len(result[0]) > 0:
+#         for idx, line in enumerate(result[0]):
+#             if len(line) < 2 or len(line[1]) < 2:
+#                 continue
+#             box = line[0]
+#             text = line[1][0] if line[1][0] else ""
+#             score = line[1][1] if isinstance(line[1][1], (float, int)) else 0.0
+#             print(f"初次识别 文本 {idx+1}: {text}, 置信度: {score:.2f}, 坐标: {box}")
 
-    # 处理识别结果
-    license_plate = []
-    boxes = []
-    scores = []
-    if result and result[0]:
-        for idx, line in enumerate(result[0]):
-            box = line[0]  # 文本框坐标
-            text = line[1][0]  # 识别文本
-            score = line[1][1]  # 置信度
-            print(f"初次识别 文本 {idx+1}: {text}, 置信度: {score:.2f}, 坐标: {box}")
+#             x_min = max(0, int(min([p[0] for p in box])) - 5)
+#             x_max = min(image.shape[1], int(max([p[0] for p in box])) + 5)
+#             y_min = max(0, int(min([p[1] for p in box])) - 5)
+#             y_max = min(image.shape[0], int(max([p[1] for p in box])) + 5)
+#             text_image = image[y_min:y_max, x_min:x_max]
+#             text_image_path = f"text_{idx+1}.jpg"
+#             cv2.imwrite(text_image_path, text_image)
 
-            # 保存文本框图像供二次识别
-            x_min = int(min([p[0] for p in box])) - 5  # 增加边界
-            x_max = int(max([p[0] for p in box])) + 5
-            y_min = int(min([p[1] for p in box])) - 5
-            y_max = int(max([p[1] for p in box])) + 5
-            x_min = max(0, x_min)  # 防止越界
-            y_min = max(0, y_min)
-            x_max = min(image.shape[1], x_max)
-            y_max = min(image.shape[0], y_max)
-            text_image = image[y_min:y_max, x_min:x_max]
-            text_image_path = f"text_{idx+1}.jpg"
-            cv2.imwrite(text_image_path, text_image)
+#             re_text, re_score = simple_ocr(text_image_path)
+#             if re_text and isinstance(re_text, str) and len(re_text) > 0:
+#                 license_plate.append(re_text)
+#                 boxes.append(box)
+#                 scores.append(re_score)
+#             else:
+#                 license_plate.append(text)
+#                 boxes.append(box)
+#                 scores.append(score)
 
-            # 对文本框截图进行简单 OCR 识别（使用 ocr_demo 逻辑）
-            re_text, re_score = simple_ocr(text_image_path)
-            if re_text:
-                license_plate.append(re_text)
-                boxes.append(box)
-                scores.append(re_score)
-            else:
-                # 回退到初次识别结果
-                license_plate.append(text)
-                boxes.append(box)
-                scores.append(score)
+#         plate_text = ""
+#         if license_plate:
+#             print(f"候选车牌文本: {license_plate}")
+#             candidates = [(text, score, box) for text, score, box in zip(license_plate, scores, boxes)
+#                         if 6 <= len(text.strip()) <= 9]
+#             if candidates:
+#                 best_text, best_score, best_box = max(candidates, key=lambda x: x[1])
+#                 plate_text = best_text
+#                 print(f"选择置信度最高的车牌: {plate_text}, 置信度: {best_score:.2f}")
+#                 boxes = [best_box]
+#                 license_plate = [best_text]
+#             else:
+#                 sorted_results = sorted(zip(boxes, license_plate, scores), key=lambda x: x[0][0][0])
+#                 license_plate = []
+#                 boxes = []
+#                 merged_text = ""
+#                 prev_x_max = -float('inf')
+#                 prev_box = None
 
-        # 选择车牌号码
-        plate_text = ""
-        if license_plate:
-            print(f"候选车牌文本: {license_plate}")
-            # 优先选择置信度最高且长度为 6-9 的文本
-            candidates = [(text, score, box) for text, score, box in zip(license_plate, scores, boxes)
-                          if 6 <= len(text.strip()) <= 9]
-            if candidates:
-                best_text, best_score, best_box = max(candidates, key=lambda x: x[1])
-                plate_text = best_text
-                print(f"选择置信度最高的车牌: {plate_text}, 置信度: {best_score:.2f}")
-                boxes = [best_box]
-                license_plate = [best_text]
-            else:
-                # 合并短文本，按 x 坐标排序
-                sorted_results = sorted(zip(boxes, license_plate, scores), key=lambda x: x[0][0][0])
-                license_plate = []
-                boxes = []
-                merged_text = ""
-                prev_x_max = -float('inf')
+#                 for box, text, score in sorted_results:
+#                     x_min = min([p[0] for p in box])
+#                     x_max = max([p[0] for p in box])
+#                     if x_min - prev_x_max < 100:
+#                         merged_text += text
+#                     else:
+#                         if merged_text:
+#                             license_plate.append(merged_text)
+#                             boxes.append(prev_box if prev_box else box)
+#                         merged_text = text
+#                     prev_x_max = x_max
+#                     prev_box = box
 
-                for box, text, score in sorted_results:
-                    x_min = min([p[0] for p in box])
-                    x_max = max([p[0] for p in box])
-                    if x_min - prev_x_max < 100:
-                        merged_text += text
-                    else:
-                        if merged_text:
-                            license_plate.append(merged_text)
-                            boxes.append(prev_box if 'prev_box' in locals() else box)
-                        merged_text = text
-                    prev_x_max = x_max
-                    prev_box = box
+#                 if merged_text:
+#                     license_plate.append(merged_text)
+#                     boxes.append(prev_box if prev_box else box)
 
-                # 添加最后一个合并文本
-                if merged_text:
-                    license_plate.append(merged_text)
-                    boxes.append(prev_box if 'prev_box' in locals() else box)
+#                 plate_text = ''.join(license_plate)  # 不强制截断
+#                 print(f"合并后车牌文本: {plate_text}")
+#                 if not plate_text:
+#                     plate_text = "无"
+#         else:
+#             print("未检测到车牌文本")
+#             plate_text = "无"
+#     else:
+#         print("PaddleOCR 未检测到任何文本")
+#         plate_text = "无"
 
-                plate_text = ''.join(license_plate)[:8]
-                print(f"合并后车牌文本: {plate_text}")
-                if not plate_text:
-                    plate_text = "无"
-        else:
-            print("未检测到车牌文本")
-            plate_text = "无"
 
-    else:
-        print("PaddleOCR 未检测到任何文本")
-        plate_text = "无"
+#     # 可视化结果
+#     for box, text in zip(boxes, license_plate):
+#         # 绘制文本框
+#         pts = np.array(box, np.int32).reshape((-1, 1, 2))
+#         cv2.polylines(output_image, [pts], True, (0, 255, 0), 2)
+#         # 绘制文本
+#         cv2.putText(
+#             output_image,
+#             text,
+#             (int(box[0][0]), int(box[0][1]) - 10),
+#             cv2.FONT_HERSHEY_SIMPLEX,
+#             0.7,
+#             (0, 0, 255),
+#             2
+#         )
 
-    # 可视化结果
-    for box, text in zip(boxes, license_plate):
-        # 绘制文本框
-        pts = np.array(box, np.int32).reshape((-1, 1, 2))
-        cv2.polylines(output_image, [pts], True, (0, 255, 0), 2)
-        # 绘制文本
-        cv2.putText(
-            output_image,
-            text,
-            (int(box[0][0]), int(box[0][1]) - 10),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.7,
-            (0, 0, 255),
-            2
-        )
+#     # 保存和显示结果
+#     cv2.imwrite("output_image.jpg", output_image)
+#     print("框出车牌的图像已保存为 output_image.jpg")
+#     plt_show0(output_image)
 
-    # 保存和显示结果
-    cv2.imwrite("output_image.jpg", output_image)
-    print("框出车牌的图像已保存为 output_image.jpg")
-    plt_show0(output_image)
+#     # 输出最终结果
+#     print(f"最终车牌号码: {plate_text}")
 
-    # 输出最终结果
-    print(f"最终车牌号码: {plate_text}")
+#     # 保存识别结果到文件（基于 ocr_demo）
+#     with open("result.txt", "w", encoding="utf-8") as f:
+#         for text in license_plate:
+#             f.write(f"{text}\n")
 
-    # 保存识别结果到文件（基于 ocr_demo）
-    with open("result.txt", "w", encoding="utf-8") as f:
-        for text in license_plate:
-            f.write(f"{text}\n")
-
-except Exception as e:
-    print(f"处理过程中发生错误: {str(e)}")
+# except Exception as e:
+#     print(f"处理过程中发生错误: {str(e)}")

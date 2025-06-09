@@ -1,2 +1,98 @@
-<h1>车牌标注系统</h1>
-<a href="/login">登录</a> | <a href="/register">注册</a>
+<!DOCTYPE html>
+<html lang="zh-CN" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>未来道具研究所 - 车牌标注系统</title>
+  <style>
+    * {
+      margin: 0; padding: 0; box-sizing: border-box;
+    }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1b2735 0%, #090a0f 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #cfd8dc;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      overflow: hidden;
+    }
+    h1 {
+      font-size: 3rem;
+      font-weight: 900;
+      letter-spacing: 4px;
+      color: #81a1c1;
+      margin-bottom: 15px;
+      user-select: none;
+      text-align: center;
+      width: 100%;
+    }
+    h2 {
+      font-weight: 400;
+      font-size: 1.25rem;
+      color: #90a4ae;
+      margin-bottom: 50px;
+      font-style: italic;
+      text-align: center;
+      letter-spacing: 1.2px;
+      user-select: none;
+      width: 100%;
+    }
+    nav {
+      display: flex;
+      gap: 32px;
+      z-index: 2;
+      user-select: none;
+    }
+    nav a {
+      position: relative;
+      display: inline-block;
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: #81a1c1;
+      padding: 12px 32px;
+      border: 2px solid #81a1c1;
+      border-radius: 12px;
+      background: rgba(20, 30, 40, 0.7);
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    nav a:hover {
+      background: #5b7ea6;
+      border-color: #5b7ea6;
+      color: #d0e7ff;
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 2.4rem;
+      }
+      nav {
+        flex-direction: column;
+        gap: 20px;
+      }
+      nav a {
+        padding: 10px 24px;
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>未来道具研究所</h1>
+  <h2>车牌标注系统</h2>
+
+  <nav>
+    <a href="/login">登录</a>
+    <a href="/register">注册</a>
+  </nav>
+
+</body>
+</html>
