@@ -1,0 +1,13 @@
+<h2>图像标注</h2>
+<img src="{{ url_for('static', filename='uploads/' + image['filename']) }}" id="target-image" width="400">
+
+<form method="POST">
+  <p>X: <input name="x" type="number" required></p>
+  <p>Y: <input name="y" type="number" required></p>
+  <p>宽度: <input name="w" type="number" required></p>
+  <p>高度: <input name="h" type="number" required></p>
+  <p>车牌号: <input name="plate_text" required></p>
+  <button type="submit">提交标注</button>
+</form>
+
+<p><a href="/dashboard">返回</a></p>

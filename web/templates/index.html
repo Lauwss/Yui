@@ -1,0 +1,11 @@
+<h2>上传的车牌图片</h2>
+<a href="/upload">上传新图片</a> | <a href="/logout">登出</a>
+<ul>
+  {% for img in images %}
+    <li>
+      <img src="{{ url_for('static', filename='uploads/' + img['filename']) }}" width="200">
+      <br>
+      <a href="{{ url_for('annotate.annotate', image_id=img['id']) }}">标注</a>
+    </li>
+  {% endfor %}
+</ul>
